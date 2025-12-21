@@ -341,6 +341,35 @@ export default function AionOS() {
     return found;
   };
 
+  // Export session data for analysis
+  const exportSessionData = () => {
+    const sessionData = {
+      timestamp: new Date().toISOString(),
+      domain: DOMAINS[domain]?.name,
+      responses: responses,
+      detectedPatterns: Object.keys(responses).map(key => ({
+        question: key,
+        response: responses[key],
+        patterns: analyzeResponse(responses[key], key)
+      })),
+      contradictions: contradictions,
+      diagnosis: {
+        pattern: diagnosis?.data?.name,
+        code: diagnosis?.data?.code,
+        signature: diagnosis?.data?.signature
+      }
+    };
+    
+    const dataStr = JSON.stringify(sessionData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `aionos-session-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleResponseSubmit = () => {
     if (!currentResponse.trim()) return;
     
@@ -712,6 +741,14 @@ export default function AionOS() {
                 FULL BREAKDOWN
               </button>
               <button
+                onClick={exportSessionData}
+                className="py-3 bg-yellow-900 hover:bg-yellow-800 text-yellow-400 font-semibold border border-yellow-700 transition-colors text-sm"
+              >
+                EXPORT SESSION DATA
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
+              <button
                 onClick={() => window.print()}
                 className="py-3 bg-red-900 hover:bg-red-800 text-red-400 font-semibold border border-red-700 transition-colors text-sm"
               >
@@ -719,6 +756,7 @@ export default function AionOS() {
               </button>
             </div>
             <p className="text-xs text-green-700 text-center mt-4">The question is: What will you do with this information?</p>
+            <p className="text-xs text-yellow-600 text-center mt-2">Want to help improve AION OS? Export your session data and share your feedback.</p>
           </div>
         </div>
       )}
